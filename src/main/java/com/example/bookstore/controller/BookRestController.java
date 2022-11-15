@@ -4,13 +4,9 @@ import com.example.bookstore.model.Book;
 import com.example.bookstore.model.ResponseModel;
 import com.example.bookstore.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 public class BookRestController {
@@ -21,16 +17,25 @@ public class BookRestController {
     public BookRestController(BookService bookService) {
         this.bookService = bookService;
     }
-
     //    GET /books - Get array of all books
     @GetMapping("/books")
-    public ResponseModel findAll() {
-        List<Book> books = bookService.findAll();
-        ResponseModel responseModel = new ResponseModel();
-        responseModel.setStatus(true);
-        responseModel.setMessage("Data is found");
-        responseModel.setData(books);
+    public ResponseModel findAll(
+            @RequestParam(value = "take", defaultValue = "0", required = false) Integer take,
+            @RequestParam(value = "skip", defaultValue = "0", required = false) Integer skip,
+            @RequestParam(value = "sort", defaultValue = "", required = false) String sort) {
 
+        List<Book> books = bookService.findAll(take, skip, sort);
+        ResponseModel responseModel = new ResponseModel();
+
+        if(books.size() > 0) {
+            responseModel.setStatus(true);
+            responseModel.setMessage("Data is found");
+            responseModel.setData(books);
+            return responseModel;
+        }
+
+        responseModel.setStatus(false);
+        responseModel.setMessage("Data Not Found found");
         return responseModel;
     }
 
@@ -45,7 +50,6 @@ public class BookRestController {
             responseModel.setStatus(true);
             responseModel.setMessage("Book Saved");
             responseModel.setData(book);
-
             return responseModel;
         }
         responseModel.setStatus(false);
@@ -57,14 +61,12 @@ public class BookRestController {
     @PostMapping("/books")
     public ResponseModel createBook(Book book) {
         ResponseModel responseModel = new ResponseModel();
-
         if(book.getUuid() != null) {
             bookService.saveBook(book);
             responseModel.setStatus(true);
             responseModel.setMessage("Book Saved");
             responseModel.setData(book);
         }
-
         responseModel.setStatus(false);
         responseModel.setMessage("Bad Data");
         return responseModel;
@@ -102,7 +104,6 @@ public class BookRestController {
             responseModel.setStatus(false);
             responseModel.setMessage("Book Not Found");
         }
-
         return responseModel;
     }
 }
